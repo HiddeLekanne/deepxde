@@ -41,6 +41,7 @@ class DeepONet(Map):
         layer_sizes_trunk,
         activation,
         kernel_initializer,
+        output_dim,
         regularization=None,
         use_bias=True,
         stacked=False,
@@ -69,6 +70,10 @@ class DeepONet(Map):
         self.stacked = stacked
         self.trainable_branch = trainable_branch
         self.trainable_trunk = trainable_trunk
+        self.output_dim = output_dim
+
+        self.layer_size_func[-1] *= output_dim
+        self.layer_size_loc[-1] *= output_dim
 
         self._inputs = None
         self._X_func_default = None
@@ -166,17 +171,21 @@ class DeepONet(Map):
             raise AssertionError(
                 "Output sizes of branch net and trunk net do not match."
             )
-        self.y = tf.einsum("bi,bi->b", y_func, y_loc)
+
+        y_func= tf.reshape(y_func,tf.stack([-1, y_func.get_shape()[-1] // self.output_dim, self.output_dim]))
+        y_loc = tf.reshape(y_loc,tf.stack([-1, y_loc.get_shape()[-1] // self.output_dim, self.output_dim]))
+
+        self.y = tf.einsum("bij,bij->bj", y_func, y_loc)
         self.y = tf.expand_dims(self.y, axis=1)
         # Add bias
         if self.use_bias:
-            b = tf.Variable(tf.zeros(1))
+            b = tf.Variable(tf.zeros([1,self.output_dim]))
             self.y += b
 
         if self._output_transform is not None:
             self.y = self._output_transform(self._inputs, self.y)
 
-        self.target = tf.placeholder(config.real(tf), [None, 1])
+        self.target = tf.placeholder(config.real(tf), [None, self.output_dim])
         self.built = True
 
     def _dense(
