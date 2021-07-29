@@ -15,6 +15,10 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return tf.keras.losses.MeanAbsolutePercentageError()(y_true, y_pred)
 
 
+def KLD_divergence(y_true, y_pred):
+    return -tf.keras.losses.KLDivergence()(y_true, y_pred)
+
+
 def mean_squared_error(y_true, y_pred):
     # Warning:
     # - Do not use ``tf.losses.mean_squared_error``, which casts `y_true` and `y_pred` to ``float32``.
@@ -39,6 +43,7 @@ def get(identifier):
 
     loss_identifier = {
         "mean absolute error": mean_absolute_error,
+        "KLD": KLD_divergence,
         "MAE": mean_absolute_error,
         "mae": mean_absolute_error,
         "mean squared error": mean_squared_error,
