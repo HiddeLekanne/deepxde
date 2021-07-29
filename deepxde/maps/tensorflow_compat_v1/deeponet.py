@@ -176,7 +176,6 @@ class DeepONet(Map):
         y_loc = tf.reshape(y_loc,tf.stack([-1, y_loc.get_shape()[-1] // self.output_dim, self.output_dim]))
 
         self.y = tf.einsum("bij,bij->bj", y_func, y_loc)
-        self.y = tf.expand_dims(self.y, axis=1)
         # Add bias
         if self.use_bias:
             b = tf.Variable(tf.zeros([1,self.output_dim]))
